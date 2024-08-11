@@ -4,7 +4,7 @@ func (app *App) AddRoutes() {
 	api := app.echo.Group("/api")
 	version := api.Group("/v1")
 
-	version.Static("/images", "./static/")
+	version.Static("/images", "./items/")
 
 	items := version.Group("/item")
 	items.GET("/:id", app.ReadItemById)

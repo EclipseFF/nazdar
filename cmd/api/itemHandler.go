@@ -64,7 +64,7 @@ func (app *App) CreateItem(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	if len(req.Images) > 0 {
-		err := os.Mkdir("./static/"+strconv.Itoa(*item.Id), 0755)
+		err := os.Mkdir("./items/"+strconv.Itoa(*item.Id), 0755)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
@@ -75,7 +75,7 @@ func (app *App) CreateItem(c echo.Context) error {
 
 			defer src.Close()
 
-			dst, _ := os.Create("./static/" + strconv.Itoa(*item.Id) + "/" + file.Filename)
+			dst, _ := os.Create("./items/" + strconv.Itoa(*item.Id) + "/" + file.Filename)
 
 			defer dst.Close()
 
