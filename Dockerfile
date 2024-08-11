@@ -6,5 +6,4 @@ COPY . .
 RUN go build -o /main ./cmd/api/
 FROM alpine:3
 COPY --from=builder main /bin/main
-COPY /apk /apk
 ENTRYPOINT ["/bin/main"]
