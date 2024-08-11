@@ -10,7 +10,7 @@ type ItemRepo struct {
 }
 
 type Item struct {
-	Id          *int
+	Id          *int      `json:"id"`
 	Name        *string   `form:"name" json:"name"`
 	Price       *int      `form:"price" json:"price"`
 	Description *string   `form:"description" json:"description"`
