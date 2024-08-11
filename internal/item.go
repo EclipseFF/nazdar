@@ -11,10 +11,10 @@ type ItemRepo struct {
 
 type Item struct {
 	Id          *int
-	Name        *string   `form:"name"`
-	Price       *int      `form:"price"`
-	Description *string   `form:"description"`
-	Images      []*string `form:"images"`
+	Name        *string   `form:"name" json:"name"`
+	Price       *int      `form:"price" json:"price"`
+	Description *string   `form:"description" json:"description"`
+	Images      []*string `form:"images" json:"images"`
 }
 
 func (r *ItemRepo) GetItemById(id *int) (*Item, error) {

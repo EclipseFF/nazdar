@@ -15,7 +15,7 @@ type Session struct {
 	Token  *string `json:"token"`
 }
 
-func (r *SessionRepo) CreateSession(userId int) (*Session, error) {
+func (r *SessionRepo) CreateSession(userId *int) (*Session, error) {
 	tx, err := r.Pool.Begin(context.Background())
 	defer tx.Rollback(context.Background())
 	if err != nil {
@@ -23,7 +23,7 @@ func (r *SessionRepo) CreateSession(userId int) (*Session, error) {
 	}
 	token := uuid.New()
 	s := new(Session)
-	s.UserId = &userId
+	s.UserId = userId
 	str := token.String()
 	s.Token = &str
 

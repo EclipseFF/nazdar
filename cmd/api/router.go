@@ -10,4 +10,7 @@ func (app *App) AddRoutes() {
 	items.GET("/:id", app.ReadItemById)
 	items.GET("", app.ReadItemsPagination)
 	items.POST("", app.CreateItem)
+
+	users := version.Group("/user")
+	users.POST("", app.CreateUser)
 }

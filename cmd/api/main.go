@@ -19,7 +19,9 @@ type Config struct {
 	dsn  string
 }
 type Repos struct {
-	Item *internal.ItemRepo
+	Item    *internal.ItemRepo
+	User    *internal.UserRepo
+	Session *internal.SessionRepo
 }
 
 type App struct {

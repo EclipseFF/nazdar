@@ -13,7 +13,7 @@ type UserRepo struct {
 
 type User struct {
 	Id    *int    `json:"id"`
-	Phone *string `json:"phone"`
+	Phone *string `form:"phoneNumber" json:"phone"`
 	Pass  *Password
 }
 
@@ -45,16 +45,12 @@ func (p *Password) Matches(plaintext string) (bool, error) {
 }
 
 func (r *UserRepo) CreateUser(user *User) (*User, error) {
-	err := user.Pass.SetPassword()
-	if err != nil {
-		return nil, err
-	}
 	tx, err := r.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number, password) VALUES(default, $1, $2)`, user.Phone, user.Pass.Hash).Scan(&user.Id, &user.Phone, &user.Pass.Hash)
+	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number) VALUES(default, $1)`, user.Phone).Scan(&user.Id, &user.Phone)
 	if err != nil {
 		return nil, err
 	}
