@@ -31,7 +31,10 @@ type App struct {
 
 func main() {
 	gin.ForceConsoleColor()
-	app := App{config: Config{port: ":4000", dsn: "postgres://postgres:asd123@localhost:5432/nazdar?sslmode=disable"}}
+
+	pgDsn := "postgres://postgres:nomadmedia@host.docker.internal:5432/nomad?sslmode=disable"
+	//dsn := "postgres://postgres:asd123@localhost:5432/nazdar?sslmode=disable"
+	app := App{config: Config{port: ":4000", dsn: pgDsn}}
 	pool, err := ConnectDB(app.config.dsn)
 	app.pool = pool
 	if err != nil {
