@@ -35,7 +35,7 @@ func main() {
 	gin.ForceConsoleColor()
 
 	pgDsn := "postgres://postgres:nomadmedia@host.docker.internal:5432/nazdar_dev?sslmode=disable"
-	//dsn := "postgres://postgres:asd123@localhost:5432/nazdar?sslmode=disable"
+	//pgDsn := "postgres://postgres:asd123@localhost:5432/nazdar?sslmode=disable"
 	app := App{config: Config{port: ":4000", dsn: pgDsn}}
 	pool, err := ConnectDB(app.config.dsn)
 	app.pool = pool
@@ -45,7 +45,9 @@ func main() {
 	app.echo = echo.New()
 
 	app.repos = &Repos{
-		Item: &internal.ItemRepo{Pool: pool},
+		Item:    &internal.ItemRepo{Pool: pool},
+		User:    &internal.UserRepo{Pool: pool},
+		Session: &internal.SessionRepo{Pool: pool},
 	}
 	app.UseMiddleware()
 	app.AddRoutes()

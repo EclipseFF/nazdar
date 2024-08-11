@@ -50,7 +50,7 @@ func (r *UserRepo) CreateUser(user *User) (*User, error) {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number) VALUES(default, $1)`, user.Phone).Scan(&user.Id, &user.Phone)
+	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number) VALUES(default, $1) returning id, phone_number`, user.Phone).Scan(&user.Id, &user.Phone)
 	if err != nil {
 		return nil, err
 	}

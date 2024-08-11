@@ -27,7 +27,7 @@ func (r *SessionRepo) CreateSession(userId *int) (*Session, error) {
 	str := token.String()
 	s.Token = &str
 
-	err = tx.QueryRow(context.Background(), "INSERT INTO sessions(user_id, token) VALUES($1, $2)", userId, str).Scan(&s.UserId, &s.Token)
+	err = tx.QueryRow(context.Background(), "INSERT INTO sessions(user_id, token) VALUES($1, $2) returning user_id, token", userId, str).Scan(&s.UserId, &s.Token)
 	if err != nil {
 		return nil, err
 	}
