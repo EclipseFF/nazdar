@@ -24,7 +24,7 @@ func (r *UserRepo) CreateUser(user *User) (*User, error) {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number, name, surname, patronymic, createdat) VALUES(default, $1, $2, $3, $3, now()) returning id, phone_number`, user.Phone, user.Name, user.Surname, user.Patronymic).Scan(&user.Id, &user.Phone)
+	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number, name, surname, patronymic, createdat) VALUES(default, $1, $2, $3, $4, now()) returning id, phone_number`, user.Phone, user.Name, user.Surname, user.Patronymic).Scan(&user.Id, &user.Phone)
 	if err != nil {
 		return nil, err
 	}
