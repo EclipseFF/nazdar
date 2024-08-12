@@ -13,4 +13,8 @@ func (app *App) AddRoutes() {
 
 	users := version.Group("/user")
 	users.POST("", app.CreateUser)
+
+	categories := version.Group("/category")
+	categories.GET("", app.ReadAllCategories)
+	categories.POST("", app.CreateCategory)
 }
