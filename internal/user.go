@@ -2,9 +2,7 @@ package internal
 
 import (
 	"context"
-	"errors"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserRepo struct {
@@ -12,36 +10,12 @@ type UserRepo struct {
 }
 
 type User struct {
-	Id    *int    `json:"id"`
-	Phone *string `form:"phoneNumber" json:"phone"`
-	Pass  *Password
-}
-
-type Password struct {
-	Plaintext string
-	Hash      string `json:"password"`
-}
-
-func (p *Password) SetPassword() error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(p.Plaintext), 14)
-	if err != nil {
-		return err
-	}
-	p.Hash = string(hash)
-	return nil
-}
-
-func (p *Password) Matches(plaintext string) (bool, error) {
-	err := bcrypt.CompareHashAndPassword([]byte(p.Hash), []byte(plaintext))
-	if err != nil {
-		switch {
-		case errors.Is(err, bcrypt.ErrMismatchedHashAndPassword):
-			return false, nil
-		default:
-			return false, err
-		}
-	}
-	return true, nil
+	Id         *int    `json:"id"`
+	Phone      *string `form:"phoneNumber" json:"phone"`
+	Name       *string `form:"name" json:"name"`
+	Surname    *string `form:"surname" json:"surname"`
+	Patronymic *string `form:"patronymic" json:"patronymic"`
+	CreatedAt  *string `form:"createdAt" json:"createdAt"`
 }
 
 func (r *UserRepo) CreateUser(user *User) (*User, error) {
@@ -50,7 +24,7 @@ func (r *UserRepo) CreateUser(user *User) (*User, error) {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
-	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number) VALUES(default, $1) returning id, phone_number`, user.Phone).Scan(&user.Id, &user.Phone)
+	err = tx.QueryRow(context.Background(), `INSERT INTO users(id, phone_number, name, surname, patronymic, createdat) VALUES(default, $1, $2, $3, $3, now()) returning id, phone_number`, user.Phone, user.Name, user.Surname, user.Patronymic).Scan(&user.Id, &user.Phone)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +42,7 @@ func (r *UserRepo) GetUserById(id *int) (*User, error) {
 	}
 	defer tx.Rollback(context.Background())
 	u := new(User)
-	err = tx.QueryRow(context.Background(), `SELECT id, phone_number FROM users where id = $1`, *id).Scan(&u.Id, &u.Phone)
+	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, surname, patronymic, createdat FROM users where id = $1`, *id).Scan(&u.Id, &u.Phone, &u.Name, &u.Surname, &u.Patronymic)
 	if err != nil {
 		return nil, err
 	}
@@ -79,14 +53,14 @@ func (r *UserRepo) GetUserById(id *int) (*User, error) {
 	return u, nil
 }
 
-func (r *UserRepo) GetUserByPhone(phone *string) (*User, error) {
+func (r *UserRepo) GetUserByPhoneAndName(phone, name *string) (*User, error) {
 	tx, err := r.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
 	u := new(User)
-	err = tx.QueryRow(context.Background(), `SELECT id, phone_number FROM users where phone_number = $1`, *phone).Scan(&u.Id, &u.Phone)
+	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, surname, patronymic, createdat FROM users where phone_number = $1 and name = $2`, *phone, *name).Scan(&u.Id, &u.Phone, &u.Name, &u.Surname, &u.Patronymic)
 	if err != nil {
 		return nil, err
 	}

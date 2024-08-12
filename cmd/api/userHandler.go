@@ -13,10 +13,17 @@ func (app *App) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
 
-	user, err := app.repos.User.CreateUser(&req)
+	var user *internal.User
+
+	user, err = app.repos.User.GetUserByPhoneAndName(req.Phone, req.Name)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		user, err = app.repos.User.CreateUser(&req)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
 	}
+
 	session, err := app.repos.Session.CreateSession(user.Id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
