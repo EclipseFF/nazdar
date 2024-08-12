@@ -19,9 +19,10 @@ type Config struct {
 	dsn  string
 }
 type Repos struct {
-	Item    *internal.ItemRepo
-	User    *internal.UserRepo
-	Session *internal.SessionRepo
+	Item     *internal.ItemRepo
+	User     *internal.UserRepo
+	Session  *internal.SessionRepo
+	Category *internal.CategoryRepo
 }
 
 type App struct {
@@ -45,9 +46,10 @@ func main() {
 	app.echo = echo.New()
 
 	app.repos = &Repos{
-		Item:    &internal.ItemRepo{Pool: pool},
-		User:    &internal.UserRepo{Pool: pool},
-		Session: &internal.SessionRepo{Pool: pool},
+		Item:     &internal.ItemRepo{Pool: pool},
+		User:     &internal.UserRepo{Pool: pool},
+		Session:  &internal.SessionRepo{Pool: pool},
+		Category: &internal.CategoryRepo{Pool: pool},
 	}
 	app.UseMiddleware()
 	app.AddRoutes()
