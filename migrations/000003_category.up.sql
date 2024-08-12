@@ -1,7 +1,7 @@
 create table category
 (
     id   serial primary key,
-    name varchar
+    name varchar unique
 );
 
 create table item_category

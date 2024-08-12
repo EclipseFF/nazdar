@@ -17,4 +17,5 @@ func (app *App) AddRoutes() {
 	categories := version.Group("/category")
 	categories.GET("", app.ReadAllCategories)
 	categories.POST("", app.CreateCategory)
+	categories.DELETE("/:id", app.DeleteCategory)
 }
