@@ -60,7 +60,7 @@ func (r *UserRepo) GetUserByPhoneAndName(phone, name *string) (*User, error) {
 	}
 	defer tx.Rollback(context.Background())
 	u := new(User)
-	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, surname, patronymic, createdat FROM users where phone_number = $1 and name = $2`, *phone, *name).Scan(&u.Id, &u.Phone, &u.Name, &u.Surname, &u.Patronymic)
+	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, surname, patronymic, createdat FROM users where phone_number = $1 and name = $2`, *phone, *name).Scan(&u.Id, &u.Phone, &u.Name, &u.Surname, &u.Patronymic, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
