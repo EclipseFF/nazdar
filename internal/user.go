@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"time"
 )
 
 type UserRepo struct {
@@ -10,12 +11,12 @@ type UserRepo struct {
 }
 
 type User struct {
-	Id         *int    `json:"id"`
-	Phone      *string `form:"phoneNumber" json:"phone"`
-	Name       *string `form:"name" json:"name"`
-	Surname    *string `form:"surname" json:"surname"`
-	Patronymic *string `form:"patronymic" json:"patronymic"`
-	CreatedAt  *string `form:"createdAt" json:"createdAt"`
+	Id         *int       `json:"id"`
+	Phone      *string    `form:"phoneNumber" json:"phone"`
+	Name       *string    `form:"name" json:"name"`
+	Surname    *string    `form:"surname" json:"surname"`
+	Patronymic *string    `form:"patronymic" json:"patronymic"`
+	CreatedAt  *time.Time `form:"createdAt" json:"createdAt"`
 }
 
 func (r *UserRepo) CreateUser(user *User) (*User, error) {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flowers/internal"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
@@ -17,6 +18,7 @@ func (app *App) CreateUser(c echo.Context) error {
 
 	user, err = app.repos.User.GetUserByPhoneAndName(req.Phone, req.Name)
 	if err != nil {
+		fmt.Println(err)
 		user, err = app.repos.User.CreateUser(&req)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
