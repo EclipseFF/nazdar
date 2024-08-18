@@ -89,3 +89,21 @@ func (r *CategoryRepo) DeleteCategory(id int) (*Category, error) {
 	}
 	return &category, nil
 }
+
+func (r *CategoryRepo) GetCategoryById(id *int) (*Category, error) {
+	tx, err := r.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+	var category Category
+	err = tx.QueryRow(context.Background(), `SELECT id, name FROM category WHERE id = $1`, id).Scan(&category.Id, &category.Name)
+	if err != nil {
+		return nil, err
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return &category, nil
+}

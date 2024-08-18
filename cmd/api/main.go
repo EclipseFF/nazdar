@@ -23,6 +23,8 @@ type Repos struct {
 	User     *internal.UserRepo
 	Session  *internal.SessionRepo
 	Category *internal.CategoryRepo
+	Cart     *internal.CartRepo
+	Admin    *internal.AdminRepo
 }
 
 type App struct {
@@ -50,6 +52,8 @@ func main() {
 		User:     &internal.UserRepo{Pool: pool},
 		Session:  &internal.SessionRepo{Pool: pool},
 		Category: &internal.CategoryRepo{Pool: pool},
+		Cart:     &internal.CartRepo{Pool: pool},
+		Admin:    &internal.AdminRepo{Pool: pool},
 	}
 	app.UseMiddleware()
 	app.AddRoutes()

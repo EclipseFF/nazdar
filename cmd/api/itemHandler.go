@@ -2,10 +2,12 @@ package main
 
 import (
 	"flowers/internal"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 )
 
@@ -27,6 +29,8 @@ func (app *App) ReadItemById(c echo.Context) error {
 func (app *App) ReadItemsPagination(c echo.Context) error {
 	limitParam := c.QueryParam("limit")
 	offsetParam := c.QueryParam("offset")
+	categoryParam := c.QueryParam("category")
+	searchParam := c.QueryParam("search")
 	limit, err := strconv.Atoi(limitParam)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "limit is invalid"})
@@ -37,7 +41,8 @@ func (app *App) ReadItemsPagination(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "offset is invalid"})
 	}
 
-	items, err := app.repos.Item.GetItemsPagination(&limit, &offset)
+	items, err := app.repos.Item.GetItemsPagination(&limit, &offset, &categoryParam, &searchParam)
+
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
@@ -58,14 +63,16 @@ func (app *App) CreateItem(c echo.Context) error {
 	for _, file := range files {
 		req.Images = append(req.Images, &file.Filename)
 	}
-
+	fmt.Println(reflect.TypeOf(req.CategoriesStr))
 	item, err := app.repos.Item.CreateItem(&req)
 	if err != nil {
+		fmt.Println(err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	if len(req.Images) > 0 {
 		err := os.Mkdir("./items/"+strconv.Itoa(*item.Id), 0755)
 		if err != nil {
+			fmt.Println(err.Error())
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 	}
@@ -83,4 +90,18 @@ func (app *App) CreateItem(c echo.Context) error {
 		}()
 	}
 	return c.JSON(http.StatusCreated, item)
+}
+
+func (app *App) DeleteItem(c echo.Context) error {
+	idParam := c.Param("id")
+	id, err := strconv.Atoi(idParam)
+	if err != nil || id < 1 {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is invalid"})
+	}
+
+	err = app.repos.Item.DeleteItem(&id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	return c.JSON(http.StatusOK, nil)
 }

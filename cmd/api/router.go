@@ -10,12 +10,27 @@ func (app *App) AddRoutes() {
 	items.GET("/:id", app.ReadItemById)
 	items.GET("", app.ReadItemsPagination)
 	items.POST("", app.CreateItem)
+	items.DELETE("/delete/:id", app.DeleteItem)
 
 	users := version.Group("/user")
 	users.POST("", app.CreateUser)
+
+	sessions := version.Group("/session")
+	sessions.POST("/admin/check", app.CheckAdminSession)
+	sessions.POST("/admin/login", app.AdminLogin)
+
+	admins := version.Group("/admin")
+	admins.GET("", app.ReadAllAdmins)
+	admins.POST("", app.AddAdmin)
 
 	categories := version.Group("/category")
 	categories.GET("", app.ReadAllCategories)
 	categories.POST("", app.CreateCategory)
 	categories.DELETE("/:id", app.DeleteCategory)
+
+	carts := version.Group("/cart")
+	carts.GET("/:token", app.ReadCart)
+	carts.POST("", app.AddItemToCart)
+	carts.DELETE("/remove", app.DeleteItemFromCart)
+	carts.POST("/checkout", app.Checkout)
 }

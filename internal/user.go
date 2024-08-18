@@ -43,7 +43,7 @@ func (r *UserRepo) GetUserById(id *int) (*User, error) {
 	}
 	defer tx.Rollback(context.Background())
 	u := new(User)
-	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, surname, patronymic, createdat FROM users where id = $1`, *id).Scan(&u.Id, &u.Phone, &u.Name, &u.Surname, &u.Patronymic)
+	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, surname, patronymic, createdat FROM users where id = $1`, *id).Scan(&u.Id, &u.Phone, &u.Name, &u.Surname, &u.Patronymic, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -91,4 +91,26 @@ func (r *UserRepo) DeleteUserById(id *int) error {
 		return err
 	}
 	return nil
+}
+
+func (r *UserRepo) GetUserByToken(token *string) (*User, error) {
+	tx, err := r.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+	u := new(User)
+	err = tx.QueryRow(context.Background(), `SELECT user_id FROM sessions where token = $1`, *token).Scan(&u.Id)
+	if err != nil {
+		return nil, err
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	u, err = r.GetUserById(u.Id)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
