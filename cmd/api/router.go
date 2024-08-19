@@ -27,8 +27,8 @@ func (app *App) AddRoutes() {
 	categories.GET("", app.ReadAllCategories)
 	categories.POST("", app.CreateCategory)
 	categories.DELETE("/:id", app.DeleteCategory)
-	categories.GET("/:id", app.ReadC)
-	categories.PUT("/:id", app.UpdateCategory)
+	categories.GET("/:id", app.ReadCategoryById)
+	categories.PUT("", app.UpdateCategory)
 
 	carts := version.Group("/cart")
 	carts.GET("/:token", app.ReadCart)
