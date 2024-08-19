@@ -4,4 +4,4 @@ create table if not exists items (
                                     price integer not null,
                                      description varchar,
                                      images varchar[]
-)
+);

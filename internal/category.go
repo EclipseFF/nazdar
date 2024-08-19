@@ -107,3 +107,20 @@ func (r *CategoryRepo) GetCategoryById(id *int) (*Category, error) {
 	}
 	return &category, nil
 }
+
+func (r *CategoryRepo) UpdateCategory(category *Category) (*Category, error) {
+	tx, err := r.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+	_, err = tx.Exec(context.Background(), `UPDATE category SET name = $1 WHERE id = $2`, category.Name, category.Id)
+	if err != nil {
+		return nil, err
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return category, nil
+}
