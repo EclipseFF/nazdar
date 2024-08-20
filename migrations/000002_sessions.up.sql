@@ -2,9 +2,7 @@ create table users(
                       id serial primary key,
                       phone_number varchar unique,
                       name varchar,
-                      surname varchar,
-                          patronymic varchar,
-    createdAt timestamp
+                      createdAt timestamp
 );
 
 create table sessions(

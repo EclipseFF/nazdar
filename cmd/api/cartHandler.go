@@ -120,6 +120,6 @@ func (app *App) Checkout(c echo.Context) error {
 	}
 
 	go app.repos.Cart.ClearCart(user.Id)
-
+	go app.repos.User.SaveUserOrder(user.Id, items)
 	return c.JSON(http.StatusOK, nil)
 }
