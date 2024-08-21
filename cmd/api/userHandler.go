@@ -2,6 +2,7 @@ package main
 
 import (
 	"flowers/internal"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strconv"
@@ -92,6 +93,7 @@ func (app *App) ReadUserOrders(c echo.Context) error {
 	}
 	orders, err := app.repos.User.GetUserOrders(user.Id)
 	if err != nil {
+		fmt.Println(err.Error())
 		return c.JSON(http.StatusNotFound, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, orders)

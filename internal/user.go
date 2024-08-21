@@ -17,6 +17,12 @@ type User struct {
 	CreatedAt *time.Time `form:"createdAt" json:"createdAt"`
 }
 
+type OrderItem struct {
+	ItemIds    []*int
+	Count      []*int
+	TotalPrice *int
+}
+
 func (r *UserRepo) CreateUser(user *User) (*User, error) {
 	tx, err := r.Pool.Begin(context.Background())
 	if err != nil {
@@ -179,34 +185,49 @@ func (r *UserRepo) SaveUserOrder(userId *int, items []*CartItem) error {
 }
 
 func (r *UserRepo) GetUserOrders(userId *int) ([]*CartItem, error) {
-
 	tx, err := r.Pool.Begin(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback(context.Background())
 
-	rows, err := tx.Query(context.Background(), `SELECT item_ids, count, total_price FROM user_orders where user_id = $1`, *userId)
+	rows, err := tx.Query(context.Background(), `SELECT item_ids, count, total_price FROM user_orders WHERE user_id = $1`, *userId)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
+
 	items := make([]*CartItem, 0)
 	for rows.Next() {
-		item := new(CartItem)
-		err = rows.Scan(&item.ItemId, &item.Count, &item.Price)
+		i := OrderItem{}
+		err = rows.Scan(&i.ItemIds, &i.Count, &i.TotalPrice)
 		if err != nil {
 			return nil, err
 		}
 
-		err = r.Pool.QueryRow(context.Background(), `SELECT name, description, images FROM items where id = $1`, *item.ItemId).Scan(&item.Name, &item.Description, &item.Images)
-		if err == nil {
+		for iter, id := range i.ItemIds {
+			var temp Item
+			err = r.Pool.QueryRow(context.Background(), `SELECT id, name, price, description, images FROM items WHERE id = $1`, id).Scan(&temp.Id, &temp.Name, &temp.Price, &temp.Description, &temp.Images)
+			if err != nil {
+				return nil, err
+			}
+
+			item := &CartItem{
+				ItemId:      temp.Id,
+				Name:        temp.Name,
+				Price:       temp.Price,
+				Description: temp.Description,
+				Images:      temp.Images,
+				Count:       i.Count[iter],
+			}
 			items = append(items, item)
 		}
 	}
+
 	err = tx.Commit(context.Background())
 	if err != nil {
 		return nil, err
 	}
+
 	return items, nil
 }
