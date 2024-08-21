@@ -131,6 +131,17 @@ func (r *UserRepo) UpdateUser(user *User, oldUser *User) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	tx, err = r.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+
 	err = tx.QueryRow(context.Background(), `SELECT id, phone_number, name, createdat FROM users where id = $1`, oldUser.Id).Scan(&user.Id, &user.Phone, &user.Name, &user.CreatedAt)
 	if err != nil {
 		return nil, err

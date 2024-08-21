@@ -16,7 +16,8 @@ func (app *App) AddRoutes() {
 	users.POST("", app.CreateUser)
 	users.PUT("", app.UpdateUser)
 	users.GET("/:id", app.ReadUserById)
-	users.GET("/orders/:id", app.ReadUserOrders)
+	users.GET("/token/:token", app.ReadUserByToken)
+	users.GET("/orders/:token", app.ReadUserOrders)
 
 	sessions := version.Group("/session")
 	sessions.POST("/admin/check", app.CheckAdminSession)
