@@ -58,36 +58,31 @@ func (r *CategoryRepo) GetAllCategories() ([]*Category, error) {
 	return cats, nil
 }
 
-func (r *CategoryRepo) DeleteCategory(id int) (*Category, error) {
+func (r *CategoryRepo) DeleteCategory(id int) error {
 	tx, err := r.Pool.Begin(context.Background())
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer tx.Rollback(context.Background())
-	var category Category
 
-	_, err = tx.Exec(context.Background(), `DELETE FROM item_category WHERE category_id = $1`, id)
-	if err != nil {
-		return nil, err
-	}
+	_, _ = tx.Exec(context.Background(), `DELETE FROM item_category WHERE category_id = $1`, id)
+
 	err = tx.Commit(context.Background())
 	if err != nil {
-		return nil, err
+		return err
 	}
 	tx, err = r.Pool.Begin(context.Background())
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer tx.Rollback(context.Background())
-	err = tx.QueryRow(context.Background(), `DELETE FROM category WHERE id = $1`, id).Scan(&category.Id, &category.Name)
-	if err != nil {
-		return nil, err
-	}
+	_, _ = tx.Exec(context.Background(), `DELETE FROM category WHERE id = $1`, id)
+
 	err = tx.Commit(context.Background())
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &category, nil
+	return nil
 }
 
 func (r *CategoryRepo) GetCategoryById(id *int) (*Category, error) {

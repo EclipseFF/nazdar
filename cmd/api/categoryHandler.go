@@ -50,11 +50,11 @@ func (app *App) DeleteCategory(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	response, err := app.repos.Category.DeleteCategory(id)
+	err = app.repos.Category.DeleteCategory(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, map[string]string{"message": "category deleted"})
 }
 
 func (app *App) UpdateCategory(c echo.Context) error {
