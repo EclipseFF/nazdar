@@ -187,6 +187,24 @@ func (r *ItemRepo) AddCategoriesToItem(id *int, categories []*Category) error {
 	return nil
 }
 
+func (r *ItemRepo) DeleteCategoriesFromItem(id *int) error {
+	tx, err := r.Pool.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+	_, err = tx.Exec(context.Background(), `DELETE FROM item_category WHERE item_id = $1`, id)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func ConvertStringToIntArray(input string) ([]*int, error) {
 	var stringArray []string
 	err := json.Unmarshal([]byte(input), &stringArray)

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"flowers/internal"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
@@ -102,82 +104,131 @@ func (app *App) DeleteItem(c echo.Context) error {
 }
 
 func (app *App) UpdateItem(c echo.Context) error {
-	/*req := struct {
+	req := struct {
 		Id            *string   `form:"id" json:"id"`
 		Name          *string   `form:"name" json:"name"`
 		Price         *string   `form:"price" json:"price"`
 		Description   *string   `form:"description" json:"description"`
 		Images        []*string `form:"images" json:"images"`
 		CategoriesIds []*string `form:"categories" json:"categories"`
+		OldImages     []string
 	}{}
 
 	err := c.Bind(&req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
-	var i internal.Item
-
+	var newItem internal.Item
 	if req.Id != nil {
-		id, err := strconv.Atoi(*req.Id)
-		if err != nil || id < 1 {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is invalid"})
+		temp, err := strconv.Atoi(*req.Id)
+		if err != nil || temp < 1 {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad id"})
 		}
-		i.Id = &id
-	} else {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
-	}
-
-	if req.Name != nil {
-		i.Name = req.Name
-	} else {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
+		newItem.Id = &temp
 	}
 
 	if req.Price != nil {
-		p, err := strconv.Atoi(*req.Price)
-		if err != nil {
-			return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is invalid"})
+		temp, err := strconv.Atoi(*req.Price)
+		if err != nil || temp < 1 {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad price"})
 		}
-		i.Price = &p
-	} else {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
+		newItem.Price = &temp
+	}
+
+	if req.Description != nil {
+		newItem.Description = req.Description
+	}
+
+	if req.Name != nil {
+		newItem.Name = req.Name
 	}
 
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
 	}
-	files := form.File["images"]
-	for _, file := range files {
-		req.Images = append(req.Images, &file.Filename)
+
+	if len(form.Value["oldImages"]) > 0 {
+		oldImages := form.Value["oldImages"][0]
+		err = json.Unmarshal([]byte(oldImages), &req.OldImages)
 	}
-	item, err := app.repos.Item.UpdateItem(&req)
+
+	toDelete := uniqueToSecondArray(req.Images, req.OldImages)
+	for _, s := range toDelete {
+		fmt.Println(123)
+		fmt.Println(s)
+		os.Remove("./items/" + strconv.Itoa(*newItem.Id) + "/" + s)
+	}
+
+	files := form.File["newImages"]
+	if len(files) > 0 {
+		os.Mkdir("./items/"+strconv.Itoa(*newItem.Id), 0755)
+	}
+	newImages := make([]*string, 0)
+	newImages = append(newImages, req.Images...)
+	for _, file := range files {
+		src, err := file.Open()
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		defer src.Close()
+
+		// Destination
+		dst, err := os.Create("./items/" + strconv.Itoa(*newItem.Id) + "/" + file.Filename)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+		defer dst.Close()
+
+		// Copy
+		if _, err = io.Copy(dst, src); err != nil {
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+
+		newImages = append(newImages, &file.Filename)
+	}
+	newItem.Images = newImages
+	res, err := app.repos.Item.UpdateItem(&newItem)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
+	app.repos.Item.DeleteCategoriesFromItem(res.Id)
 
-	os.RemoveAll("./items/" + strconv.Itoa(*item.Id))
+	temCats := make([]*string, 0)
+	cats := make([]*internal.Category, 0)
+	err = json.Unmarshal([]byte(*req.CategoriesIds[0]), &temCats)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	for _, id := range temCats {
+		temp, err := strconv.Atoi(*id)
+		if err != nil || temp < 1 {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad id"})
+		}
+		cats = append(cats, &internal.Category{Id: &temp})
+	}
+	newItem.Categories = cats
+	err = app.repos.Item.AddCategoriesToItem(res.Id, newItem.Categories)
+	return c.JSON(http.StatusOK, req)
+}
 
-	if len(req.Images) > 0 {
-		err := os.Mkdir("./items/"+strconv.Itoa(*item.Id), 0755)
-		if err != nil {
+func uniqueToSecondArray(arr1 []*string, arr2 []string) []string {
+	if arr1 == nil || len(arr1) == 0 {
+		return arr2 // If there are no images, return all old images to be deleted.
+	}
 
-			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	elementMap := make(map[string]bool)
+	for _, item := range arr1 {
+		if item != nil {
+			elementMap[*item] = true
 		}
 	}
-	for _, file := range files {
-		go func() {
-			src, _ := file.Open()
 
-			defer src.Close()
-
-			dst, _ := os.Create("./items/" + strconv.Itoa(*item.Id) + "/" + file.Filename)
-
-			defer dst.Close()
-
-			io.Copy(dst, src)
-		}()
+	var result []string
+	for _, item := range arr2 {
+		if !elementMap[item] {
+			result = append(result, item)
+		}
 	}
-	return c.JSON(http.StatusCreated, item)*/
-	return c.JSON(http.StatusCreated, "1232")
+	return result
 }
