@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"strconv"
@@ -14,7 +13,7 @@ type ItemRepo struct {
 }
 
 type Item struct {
-	Id            *int        `json:"id"`
+	Id            *int        `json:"id" form:"id"`
 	Name          *string     `form:"name" json:"name"`
 	Price         *int        `form:"price" json:"price"`
 	Description   *string     `form:"description" json:"description"`
@@ -34,7 +33,11 @@ func (r *ItemRepo) GetItemById(id *int) (*Item, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	cats, err := r.GetCategoriesByItemId(item.Id)
+	if err != nil {
+		return nil, err
+	}
+	item.Categories = cats
 	err = tx.Commit(context.Background())
 	if err != nil {
 		return nil, err
@@ -113,7 +116,6 @@ func (r *ItemRepo) CreateItem(item *Item) (*Item, error) {
 	}
 	ids, err := ConvertStringToIntArray(*item.CategoriesStr[0])
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
 	temp := make([]*Category, len(ids))
@@ -123,7 +125,6 @@ func (r *ItemRepo) CreateItem(item *Item) (*Item, error) {
 	item.Categories = temp
 	err = r.AddCategoriesToItem(i.Id, item.Categories)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
 	return &i, nil
@@ -266,4 +267,35 @@ func (r *ItemRepo) DeleteItem(id *int) error {
 	}()
 
 	return nil
+}
+
+func (r *ItemRepo) GetItemsCategory(id *int) ([]*Category, error) {
+	tx, err := r.Pool.Begin(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(context.Background())
+	rows, err := tx.Query(context.Background(), `SELECT category_id FROM item_category WHERE item_id = $1`, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var categories []*Category
+	categoryRepo := &CategoryRepo{Pool: r.Pool}
+	for rows.Next() {
+		var id int
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		category, err := categoryRepo.GetCategoryById(&id)
+		if err != nil {
+			return nil, err
+		}
+		categories = append(categories, category)
+	}
+	err = tx.Commit(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return categories, nil
 }

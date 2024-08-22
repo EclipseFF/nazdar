@@ -102,11 +102,47 @@ func (app *App) DeleteItem(c echo.Context) error {
 }
 
 func (app *App) UpdateItem(c echo.Context) error {
-	var req internal.Item
+	/*req := struct {
+		Id            *string   `form:"id" json:"id"`
+		Name          *string   `form:"name" json:"name"`
+		Price         *string   `form:"price" json:"price"`
+		Description   *string   `form:"description" json:"description"`
+		Images        []*string `form:"images" json:"images"`
+		CategoriesIds []*string `form:"categories" json:"categories"`
+	}{}
+
 	err := c.Bind(&req)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
+	var i internal.Item
+
+	if req.Id != nil {
+		id, err := strconv.Atoi(*req.Id)
+		if err != nil || id < 1 {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is invalid"})
+		}
+		i.Id = &id
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
+	}
+
+	if req.Name != nil {
+		i.Name = req.Name
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
+	}
+
+	if req.Price != nil {
+		p, err := strconv.Atoi(*req.Price)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is invalid"})
+		}
+		i.Price = &p
+	} else {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "id is required"})
+	}
+
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
@@ -142,5 +178,6 @@ func (app *App) UpdateItem(c echo.Context) error {
 			io.Copy(dst, src)
 		}()
 	}
-	return c.JSON(http.StatusCreated, item)
+	return c.JSON(http.StatusCreated, item)*/
+	return c.JSON(http.StatusCreated, "1232")
 }
