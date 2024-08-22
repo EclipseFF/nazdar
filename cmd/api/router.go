@@ -11,6 +11,7 @@ func (app *App) AddRoutes() {
 	items.GET("", app.ReadItemsPagination)
 	items.POST("", app.CreateItem)
 	items.DELETE("/delete/:id", app.DeleteItem)
+	items.PUT("", app.UpdateItem)
 
 	users := version.Group("/user")
 	users.POST("", app.CreateUser)

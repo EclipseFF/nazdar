@@ -2,12 +2,10 @@ package main
 
 import (
 	"flowers/internal"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"os"
-	"reflect"
 	"strconv"
 )
 
@@ -63,16 +61,13 @@ func (app *App) CreateItem(c echo.Context) error {
 	for _, file := range files {
 		req.Images = append(req.Images, &file.Filename)
 	}
-	fmt.Println(reflect.TypeOf(req.CategoriesStr))
 	item, err := app.repos.Item.CreateItem(&req)
 	if err != nil {
-		fmt.Println(err.Error())
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	if len(req.Images) > 0 {
 		err := os.Mkdir("./items/"+strconv.Itoa(*item.Id), 0755)
 		if err != nil {
-			fmt.Println(err.Error())
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 	}
@@ -104,4 +99,48 @@ func (app *App) DeleteItem(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 	}
 	return c.JSON(http.StatusOK, nil)
+}
+
+func (app *App) UpdateItem(c echo.Context) error {
+	var req internal.Item
+	err := c.Bind(&req)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
+	}
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	files := form.File["images"]
+	for _, file := range files {
+		req.Images = append(req.Images, &file.Filename)
+	}
+	item, err := app.repos.Item.UpdateItem(&req)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	os.RemoveAll("./items/" + strconv.Itoa(*item.Id))
+
+	if len(req.Images) > 0 {
+		err := os.Mkdir("./items/"+strconv.Itoa(*item.Id), 0755)
+		if err != nil {
+
+			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		}
+	}
+	for _, file := range files {
+		go func() {
+			src, _ := file.Open()
+
+			defer src.Close()
+
+			dst, _ := os.Create("./items/" + strconv.Itoa(*item.Id) + "/" + file.Filename)
+
+			defer dst.Close()
+
+			io.Copy(dst, src)
+		}()
+	}
+	return c.JSON(http.StatusCreated, item)
 }
