@@ -33,7 +33,7 @@ func SendApiReq(user *User, items []*CartItem) error {
 		totalPrice += *item.Price * *item.Count
 	}
 
-	title := "Заказ с сайта, номер " + *user.Phone + " " + body + " " + "Сумма: " + fmt.Sprintf("%d", totalPrice)
+	title := "Заказ с сайта, номер " + *user.Phone + " имя " + *user.Name + body + " " + "Сумма: " + fmt.Sprintf("%d", totalPrice)
 	deal := Deal{
 		Fields: DealFields{
 			Title:       title,
