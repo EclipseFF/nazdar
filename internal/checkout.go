@@ -26,14 +26,24 @@ type DealFields struct {
 
 func SendApiReq(user *User, items []*CartItem) error {
 	webhookURL := "https://nazdar.bitrix24.kz/rest/60087/0l0bq8l6noka8xx4/crm.deal.add.json"
-	body := " "
+	body := ""
 	totalPrice := 0
 	for _, item := range items {
-		body += *item.Name + " " + fmt.Sprintf("%d", *item.Count) + " шт. " + fmt.Sprintf("%d", *item.Price) + " тг. " + *item.Description + " \n"
+		if item.Name != nil {
+			body += *item.Name + " "
+		}
+		body += fmt.Sprintf("%d", *item.Count) + " шт. "
+		if item.Price != nil {
+			body += fmt.Sprintf("%d", *item.Price) + " тг. "
+		}
+		if item.Description != nil {
+			body += *item.Description
+		}
+		body += "\n"
 		totalPrice += *item.Price * *item.Count
 	}
 
-	title := "Заказ с сайта; номер " + *user.Phone + "; имя " + *user.Name + "; " + "Сумма: " + fmt.Sprintf("%d", totalPrice) + "; \n"
+	title := "Заказ с сайта; номер " + *user.Phone + "; имя " + *user.Name + "; " + "Сумма: " + fmt.Sprintf("%d", totalPrice) + "; \n" + body
 
 	deal := Deal{
 		Fields: DealFields{

@@ -39,5 +39,5 @@ func (app *App) AddRoutes() {
 	carts.GET("/:token", app.ReadCart)
 	carts.POST("", app.AddItemToCart)
 	carts.DELETE("/remove", app.DeleteItemFromCart)
-	carts.POST("/checkout", app.Checkout)
+	//carts.POST("/checkout", app.Checkout)
 }

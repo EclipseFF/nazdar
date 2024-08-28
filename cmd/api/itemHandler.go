@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flowers/internal"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"io"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
 )
 
@@ -111,7 +111,7 @@ func (app *App) UpdateItem(c echo.Context) error {
 		Description   *string   `form:"description" json:"description"`
 		Images        []*string `form:"images" json:"images"`
 		CategoriesIds []*string `form:"categories" json:"categories"`
-		OldImages     []string
+		OldImages     []string  `form:"oldImages" json:"oldImages"`
 	}{}
 
 	err := c.Bind(&req)
@@ -122,6 +122,7 @@ func (app *App) UpdateItem(c echo.Context) error {
 	if req.Id != nil {
 		temp, err := strconv.Atoi(*req.Id)
 		if err != nil || temp < 1 {
+
 			return c.JSON(http.StatusBadRequest, map[string]string{"error": "bad id"})
 		}
 		newItem.Id = &temp
@@ -153,13 +154,6 @@ func (app *App) UpdateItem(c echo.Context) error {
 		err = json.Unmarshal([]byte(oldImages), &req.OldImages)
 	}
 
-	toDelete := uniqueToSecondArray(req.Images, req.OldImages)
-	for _, s := range toDelete {
-		fmt.Println(123)
-		fmt.Println(s)
-		os.Remove("./items/" + strconv.Itoa(*newItem.Id) + "/" + s)
-	}
-
 	files := form.File["newImages"]
 	if len(files) > 0 {
 		os.Mkdir("./items/"+strconv.Itoa(*newItem.Id), 0755)
@@ -172,22 +166,23 @@ func (app *App) UpdateItem(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		defer src.Close()
-
-		// Destination
 		dst, err := os.Create("./items/" + strconv.Itoa(*newItem.Id) + "/" + file.Filename)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
 		defer dst.Close()
-
-		// Copy
 		if _, err = io.Copy(dst, src); err != nil {
 			return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		}
-
 		newImages = append(newImages, &file.Filename)
 	}
+
+	for _, image := range req.OldImages {
+		newImages = append(newImages, &image)
+	}
+
 	newItem.Images = newImages
+
 	res, err := app.repos.Item.UpdateItem(&newItem)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
@@ -209,26 +204,36 @@ func (app *App) UpdateItem(c echo.Context) error {
 	}
 	newItem.Categories = cats
 	err = app.repos.Item.AddCategoriesToItem(res.Id, newItem.Categories)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+	go app.DeleteImages(res.Id)
 	return c.JSON(http.StatusOK, req)
 }
 
-func uniqueToSecondArray(arr1 []*string, arr2 []string) []string {
-	if arr1 == nil || len(arr1) == 0 {
-		return arr2 // If there are no images, return all old images to be deleted.
+func (app *App) DeleteImages(itemId *int) {
+	item, err := app.repos.Item.GetItemById(itemId)
+	if err != nil {
+		return
 	}
 
-	elementMap := make(map[string]bool)
-	for _, item := range arr1 {
-		if item != nil {
-			elementMap[*item] = true
-		}
+	images := make([]string, 0)
+	for _, image := range item.Images {
+		images = append(images, *image)
 	}
 
-	var result []string
-	for _, item := range arr2 {
-		if !elementMap[item] {
-			result = append(result, item)
+	filenames := make([]string, 0)
+	dir, err := os.ReadDir("./items/" + strconv.Itoa(*itemId))
+	if err != nil {
+		return
+	}
+
+	for _, file := range dir {
+		filenames = append(filenames, file.Name())
+	}
+	for _, filename := range filenames {
+		if !slices.Contains(images, filename) {
+			os.Remove("./items/" + strconv.Itoa(*itemId) + "/" + filename)
 		}
 	}
-	return result
 }
