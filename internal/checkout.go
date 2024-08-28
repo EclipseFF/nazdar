@@ -29,11 +29,12 @@ func SendApiReq(user *User, items []*CartItem) error {
 	body := " "
 	totalPrice := 0
 	for _, item := range items {
-		body += *item.Name + " " + fmt.Sprintf("%d", *item.Count) + " шт. "
+		body += *item.Name + " " + fmt.Sprintf("%d", *item.Count) + " шт. " + fmt.Sprintf("%d", *item.Price) + " тг. " + *item.Description + " \n"
 		totalPrice += *item.Price * *item.Count
 	}
 
-	title := "Заказ с сайта, номер " + *user.Phone + " имя " + *user.Name + body + " " + "Сумма: " + fmt.Sprintf("%d", totalPrice)
+	title := "Заказ с сайта; номер " + *user.Phone + "; имя " + *user.Name + "; " + "Сумма: " + fmt.Sprintf("%d", totalPrice) + "; \n"
+
 	deal := Deal{
 		Fields: DealFields{
 			Title:       title,
