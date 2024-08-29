@@ -25,8 +25,7 @@ type DealFields struct {
 }
 
 func SendApiReq(user *User, items []*CartItem) error {
-	//webhookURL := "https://nazdar.bitrix24.kz/rest/60087/0l0bq8l6noka8xx4/crm.deal.add.json"
-	webhookURL := "https://123.bitrix24.kz/rest/60087/0l0bq8l6noka8xx4/crm.deal.add.json"
+	webhookURL := "https://nazdar.bitrix24.kz/rest/60087/0l0bq8l6noka8xx4/crm.deal.add.json"
 	body := ""
 	totalPrice := 0
 	for _, item := range items {
